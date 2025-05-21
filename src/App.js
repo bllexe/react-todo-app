@@ -1,115 +1,49 @@
-import './App.css';
-import { useEffect,useState } from 'react';
+import React, { useEffect, useState } from "react";
+import "./App.css";
+
+import TodoForm from "./components/TodoForm";
+import TodoList from "./components/TodoList";
 
 function App() {
   const [todos, setTodos] = useState([]);
-  const [newTodo, setNewTodo] = useState("");
 
-  const baseUrl = "http://localhost:3001/todos";
+  const fetchTodos = () => {
+    fetch("http://localhost:3001/todos")
+      .then((res) => res.json())
+      .then((data) => setTodos(data));
+  };
 
   useEffect(() => {
     fetchTodos();
   }, []);
 
-  const fetchTodos = () => {
-    fetch(baseUrl)
-      .then((res) => res.json())
-      .then((data) => setTodos(data))
-      .catch((err) => console.error("Error while fetching todos:", err));
-  };
-
-  // Yeni todo ekleme
-  const handleAddTodo = () => {
-    if (newTodo.trim() === "") {
-      alert("Please enter a todo");
-      return;
-    }
-
-    else if (todos.some((todo) => todo.title === newTodo)) {
-      alert("Already exists");
-      return;
-    }
-
-
-    const todoToAdd = {
-      title: newTodo,
-      completed: false,
-    };
-
-    fetch(baseUrl, {
+  const addTodo = (title) => {
+    fetch("http://localhost:3001/todos", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(todoToAdd),
-    })
-      .then((res) => res.json())
-      .then(() => {
-        setNewTodo(""); // input'u temizle
-        fetchTodos();   // listeyi güncelle
-      });
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, completed: false }),
+    }).then(() => fetchTodos());
   };
 
-  //delete todo
-
-  const handleDeleteTodo = (id) =>{
-    fetch(`${baseUrl}/${id}`,{
-      method:"DELETE"
-    })
-    .then(() => fetchTodos())
-    .catch((err) => console.error("Error while deleting todo:", err));
-  }
-
-  const handleToggleComplate = (todo) =>{
-    fetch(`${baseUrl}/${todo.id}`,{
-      method:"PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        completed: !todo.completed,
-      }),
-    })
-    .then(() => fetchTodos())
-    .catch((err) => console.error("Error while deleting todo:", err));
+  const deleteTodo = (id) => {
+    fetch(`http://localhost:3001/todos/${id}`, {
+      method: "DELETE",
+    }).then(() => fetchTodos());
   };
 
-return (
+  const toggleTodo = (todo) => {
+    fetch(`http://localhost:3001/todos/${todo.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ completed: !todo.completed }),
+    }).then(() => fetchTodos());
+  };
+
+  return (
     <div className="App">
-      <h1>Todo Lists</h1>
-
-      <div>
-        <input
-          type="text"
-          placeholder="Yeni todo gir..."
-          value={newTodo}
-          onChange={(e) => setNewTodo(e.target.value)}
-        />
-        <button onClick={handleAddTodo}>ADD</button>
-      </div>
-
-      <ul>
-      {todos.map((todo) => (
-        <li key={todo.id} className={todo.completed ? "completed" : ""}>
-          <span
-            style={{
-              textDecoration: todo.completed ? "line-through" : "none",
-              color: todo.completed ? "gray" : "black",
-              cursor: "pointer",
-            }}
-            onClick={() => handleToggleComplate(todo)}
-          >
-            {todo.title}
-          </span>
-
-          <button onClick={() => handleToggleComplate(todo)}>
-            {todo.completed ? "Undo" : "Done"}
-          </button>
-
-          <button style={{ backgroundColor: "red", color: "white" }} onClick={() => handleDeleteTodo(todo.id)}>Delete</button>
-        </li>
-      ))}
-    </ul>
+      <h1>React Todo App</h1>
+      <TodoForm onAdd={addTodo} />
+      <TodoList todos={todos} onDelete={deleteTodo} onToggle={toggleTodo} />
     </div>
   );
 }

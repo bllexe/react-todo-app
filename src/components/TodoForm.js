@@ -1,9 +1,23 @@
-import React, { Component } from 'react'
+import React, { Component, useState } from 'react'
 
-export default class TodoForm extends Component {
-  render() {
+
+const TodoForm = ({ onAdd }) =>{
+    const [title,setTitle] = useState("");
+
+    const handeSubmit =(e) =>{
+        e.preventDefault();
+        if(!title) return;
+        onAdd(title);
+        setTitle("");
+    };
+
     return (
-      <div>TodoForm</div>
+        <form onSubmit={handeSubmit}>
+            <input type="text" placeholder="Add todo" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <button type="submit">Add</button>
+        </form>
     )
-  }
 }
+
+
+export default TodoForm
